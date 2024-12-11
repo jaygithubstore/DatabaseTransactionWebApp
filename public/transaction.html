@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Food Transaction</title>
+    <link rel="stylesheet" href="styles.css">
+    <script>
+        quantities = {};
+        inventory = {};
+        ab = 0;
+        let selectedCustomerBA;
+
+        async function fetchStock(rid) {
+            if (isNaN(rid) || rid === null) {
+                console.error("Invalid bank account number.");
+                return;
+            }
+            try {
+                // Correctly format the URL with the 'restaurant_id' query parameter
+                const response = await fetch(`http://localhost:3000/stock/${rid}`);
+                
+                // Check if the response is ok (status code 200-299)
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                // Parse the JSON response
+                const stocks = await response.json();
+                
+                // Loop through the menus and update the inventory
+                stocks.forEach(stock => {
+                    inventory[stock.item_id] = stock.stock;
+                });
+                
+            } catch (error) {
+                console.error("Error fetching stock:", error);
+            }
+
+            // Call fetchMenu after updating the inventory
+            fetchMenu();
+        }
+
+
+        async function fetchCustomers() {
+            const response = await fetch('http://localhost:3000/customer');
+            const customers = await response.json();
+            const table = document.getElementById('customerTable');
+            table.innerHTML = '';
+            customers.forEach(customer => {
+                const row = `<tr>
+                                <td>${customer.cid}</td>
+                                <td>${customer.name}</td>
+                                <td>${customer.email}</td>
+                                <td>${customer.phone_number}</td>
+                                <td>${customer.membership}</td>
+                                <td>${customer.bank_account}</td>
+                                <td><button onclick="selectCustomer(${customer.cid}, '${customer.name}', '${customer.bank_account}', ${customer.membership})">Select</button></td>
+                             </tr>`;
+                table.innerHTML += row;
+            });
+        }
+
+        async function fetchBankInfo(selectedCustomerBA) {
+            // Check if `selectedCustomerBA` is a valid integer
+            if (isNaN(selectedCustomerBA) || selectedCustomerBA === null) {
+                console.error("Invalid bank account number.");
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:3000/bank/${selectedCustomerBA}`);
+                
+                if (!response.ok) {
+                    throw new Error("Network response was not ok " + response.statusText);
+                }
+
+                const costs = await response.json();
+                const table = document.getElementById('bankTable');
+                table.innerHTML = '';
+                
+                costs.forEach(cost => {
+                    ab = cost.account_balance;
+                    const row = `<tr>
+                                    <td>${cost.card_number}</td>
+                                    <td>${cost.card_expiration}</td>
+                                    <td>${cost.card_pin}</td>
+                                    <td>${cost.account_balance}</td>
+                                </tr>`;
+                    table.innerHTML += row;
+                });
+            } catch (error) {
+                console.error("Error in fetching bank info: ", error);
+            }
+        }
+
+
+        async function fetchRestaurants() {
+            const response = await fetch('http://localhost:3000/restaurant');
+            const restaurants = await response.json();
+            const table = document.getElementById('restaurantTable');
+            table.innerHTML = '';  // Clear any previous rows
+
+            // Loop through the restaurants and create table rows
+            restaurants.forEach(restaurant => {
+                const row = `<tr>
+                                <td>${restaurant.rid}</td>
+                                <td>${restaurant.location}</td>
+                                <td>${restaurant.name}</td>
+                                <td>${restaurant.rating}</td>
+                                <td><button onclick="selectRestaurant(${restaurant.rid}, '${restaurant.name}', '${restaurant.location}', ${restaurant.rating})">Select</button></td>
+                             </tr>`;
+                table.innerHTML += row;
+            });
+        }
+
+        async function fetchEmployees(rid) {
+            if (isNaN(rid) || rid === null) {
+                console.error("Invalid restaurant number.");
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:3000/employees/${rid}`);
+                
+                if (!response.ok) {
+                    throw new Error("Network response was not ok " + response.statusText);
+                }
+
+                const emp = await response.json();
+                const table = document.getElementById('employeesTable');
+                table.innerHTML = '';
+                
+                emp.forEach(e => {
+                    const row = `<tr>
+                                    <td>${e.name}</td>
+                                    <td>${e.role}</td>
+                                </tr>`;
+                    table.innerHTML += row;
+                });
+            } catch (error) {
+                console.error("Error in fetching bank info: ", error);
+            }
+        }
+
+        async function fetchMenu() {
+            totalCost = 0;
+            const response = await fetch('http://localhost:3000/menu');
+            const menus = await response.json();
+            const table = document.getElementById('menuTable');
+            table.innerHTML = '';
+
+
+            menus.forEach(menu => {
+                // Initialize quantity at 0 for each item
+                quantities[menu.item_id] = 0;
+
+                const row = `<tr>
+                                <td>${menu.item_id}</td>
+                                <td>${menu.item_name}</td>
+                                <td>${menu.description}</td>
+                                <td>${menu.cost}</td>
+                                <td>${menu.member_cost}</td>
+                                <td>${inventory[menu.item_id]}</td>
+                                <td id="quantity-${menu.item_id}">0</td>
+                                <td>
+                                    <button onclick="incrementQuantity(${menu.item_id}, ${menu.cost}, ${menu.member_cost})">Add</button>
+                                </td>
+                                <td>
+                                    <button onclick="decrementQuantity(${menu.item_id}, ${menu.cost}, ${menu.member_cost})">Remove</button>
+                                </td>
+                             </tr>`;
+                table.innerHTML += row;
+            });
+
+            // Function to increment quantity for a specific item
+            window.incrementQuantity = function(itemId, itemCost, memCost) {
+                // Increment the quantity of the selected item
+                quantities[itemId]++;
+                
+                // Update the displayed quantity in the table
+                document.getElementById(`quantity-${itemId}`).innerText = quantities[itemId];
+
+                // Increase the total cost and update display
+                if (member)
+                {
+                    totalCost += memCost;
+                }
+                else
+                {
+                    totalCost += itemCost;
+                }
+                updateTotalCost();
+            };
+
+            // Function to decrement quantity for a specific item
+            window.decrementQuantity = function(itemId, itemCost, memCost) {
+                if (quantities[itemId] > 0) {  // Ensure quantity doesn't go below 0
+                    quantities[itemId]--;
+                    
+                    // Update the displayed quantity in the table
+                    document.getElementById(`quantity-${itemId}`).innerText = quantities[itemId];
+
+                    // Decrease the total cost and update display
+                    if (member)
+                    {
+                        totalCost -= memCost;
+                    }
+                    else
+                    {
+                        totalCost -= itemCost;
+                    }
+                    updateTotalCost();
+                }
+            };
+
+            // Function to update total cost display
+            function updateTotalCost() {
+                document.getElementById('totalCost').innerText = `Total Cost: $${totalCost.toFixed(2)}`;
+                document.getElementById('taxCost').innerText = `Total Cost With Tax: $${(totalCost * 1.08).toFixed(2)}`;
+            }
+
+            window.applyTip = function() {
+                const tipInput = document.getElementById('tipInput').value;
+                tipAmount = parseFloat(tipInput) || 0; // Default to 0 if no tip is entered
+                totalCost += tipAmount;
+                updateTotalCost(); // Update total cost to include the tip
+            };
+        }
+
+        function selectRestaurant(rid, name, location, rating) {
+            // Set the global variable to the selected restaurant's ID
+            selectedRestaurantId = rid;  // Use rid here
+            fetchStock(rid);
+            fetchEmployees(rid);
+            // Display the selected restaurant details
+            document.getElementById('selectedRestaurant').innerText = `You selected: ${name} in ${location}, Rating: ${rating}`;
+        }
+
+        function selectPaymentMethod() {
+            const cashOption = document.getElementById('cash');
+            const cardOption = document.getElementById('card');
+
+            // Check which radio button is selected and update the payment method variable
+            if (cashOption.checked) {
+                paymentMethod = "cash";
+            } else if (cardOption.checked) {
+                paymentMethod = "card";
+            }
+
+            // Display the selected payment method below
+            document.getElementById('selectedPayment').innerText = `Selected Payment Method: ${paymentMethod}`;
+        }
+        let member = false;
+
+        function selectCustomer(cid, name, bank_account, membership) {
+            // Set the global variable to the selected restaurant's ID
+            cidA = cid;  
+            selectedCustomerBA = bank_account;
+            member = membership;
+            fetchBankInfo(selectedCustomerBA);
+
+            // Display the selected restaurant details
+            document.getElementById('selectedCustomer').innerText = `You selected: ${cid}:${name} with Bank Account Number: ${bank_account}, Membership: ${membership}`;
+        }
+
+        async function commitTransaction() {
+            try {
+                // Create the data object to be sent
+                const requestData = {
+                    cid: cidA,
+                    ba: selectedCustomerBA,
+                    rid: selectedRestaurantId,
+                    cost: totalCost * 1.08,
+                    itemDict: quantities,
+                    paymentMethod: paymentMethod,
+                    stockDict: inventory,
+                    balance: ab // Assuming 'ab' is the updated balance
+                };
+
+                // Send the POST request to a single endpoint
+                const response = await fetch('http://localhost:3000/commitTransaction', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestData)
+                });
+
+                // Handle the response
+                if (response.ok) {
+                    // Successful transaction
+                    console.log("Transaction successfully committed.");
+                    alert("Order has been SUCCESSFULLY PLACED, Bank balance updated, and Stock updated.");
+                    window.location.href = '/tables.html'; // Redirect to the home page
+                } else {
+                    const errorData = await response.json();
+                    console.error("Error:", errorData.error);
+                    alert("There was an error processing your transaction. Error:" + errorData.error);
+                    window.location.href = "/tables.html";
+                }
+            } catch (error) {
+                console.error("Request failed", error);
+                alert("An error occurred while submitting the transaction.");
+                window.location.href = "/tables.html";
+            }
+        }
+
+        function navigateToTables() {
+            window.location.href = 'tables.html';
+        }
+        function navigateToSimulation() {
+            window.location.href = 'simulation.html';
+        }
+        function navigateToHome() {
+            window.location.href = 'index.html';
+        }
+        function navigateToAnalytics() {
+            window.location.href = 'analytics.html';
+        }
+
+    </script>
+</head>
+<body onload="fetchRestaurants(), fetchCustomers(), fetchMenu(), fetchBankInfo()">
+    <!-- Header Navigation -->
+    <header class="header-container">
+        <img src="images.png" alt="logo" class="logo">
+        <nav>
+            <button class="centered-button" onclick="navigateToHome()">Home Page</button>
+            <button class="centered-button" onclick="navigateToAnalytics()">View Analytics</button>
+            <button class="centered-button" onclick="navigateToTables()">View Tables</button>
+            <button class="centered-button" onclick="navigateToSimulation()">Run Simulation</button>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Customer Selection -->
+        <section class="form-section">
+            <h1>Select a Customer</h1>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Customer ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone Number</th>
+                        <th>Membership</th>
+                        <th>Bank Account</th>
+                        <th>Select</th>
+                    </tr>
+                </thead>
+                <tbody id="customerTable"></tbody>
+            </table>
+            <p id="selectedCustomer" class="highlight"></p>
+        </section>
+
+        <!-- Restaurant Selection -->
+        <section class="form-section">
+            <h1>Select a Restaurant</h1>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Restaurant ID</th>
+                        <th>Location</th>
+                        <th>Name</th>
+                        <th>Rating</th>
+                        <th>Select</th>
+                    </tr>
+                </thead>
+                <tbody id="restaurantTable"></tbody>
+            </table>
+            <p id="selectedRestaurant" class="highlight"></p>
+        </section>
+
+        <!-- Payment Method -->
+        <section class="form-section">
+            <h1>Select a Payment Method</h1>
+            <div>
+                <label>
+                    <input type="radio" id="cash" name="payment" value="cash" onclick="selectPaymentMethod()"> Cash
+                </label>
+                <label>
+                    <input type="radio" id="card" name="payment" value="card" onclick="selectPaymentMethod()"> Card
+                </label>
+            </div>
+            <p id="selectedPayment" class="highlight"></p>
+        </section>
+
+        <!-- Bank Info -->
+        <section class="form-section">
+            <h1>Bank Information</h1>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Card Number</th>
+                        <th>Card Expiration</th>
+                        <th>Card PIN</th>
+                        <th>Account Balance</th>
+                    </tr>
+                </thead>
+                <tbody id="bankTable"></tbody>
+            </table>
+        </section>
+
+        <section class="form-section">
+            <h1>Employee Information</h1>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Employee Name</th>
+                        <th>Role</th>
+                    </tr>
+                </thead>
+                <tbody id="employeesTable"></tbody>
+            </table>
+        </section>
+
+        <!-- Menu Selection -->
+        <section class="form-section">
+            <h1>Select Menu Items</h1>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Item ID</th>
+                        <th>Item Name</th>
+                        <th>Description</th>
+                        <th>Cost</th>
+                        <th>Member Cost</th>
+                        <th>Stock</th>
+                        <th>Quantity</th>
+                        <th>Add</th>
+                        <th>Remove</th>
+                    </tr>
+                </thead>
+                <tbody id="menuTable"></tbody>
+            </table>
+            <p id="totalCost" class="highlight">Total Cost: $0.00</p>
+        </section>
+
+        <!-- Tip Section -->
+        <section class="form-section">
+            <h2>Add a Tip</h2>
+            <div>
+                <label for="tipInput">Tip Amount: $</label>
+                <input type="number" id="tipInput" step="0.01" min="0">
+                <button class="centered-button" onclick="applyTip()">Submit Tip</button>
+            </div>
+        </section>
+
+        <!-- Confirm Order -->
+        <section class="form-section">
+            <h1>Confirm Your Order</h1>
+            <h2 id="taxCost">Cost With Tax</h2>
+            <button class="centered-button confirm-button" onclick="commitTransaction()">Place Order</button>
+        </section>
+    </main>
+
+    <footer>
+        <p class="footer-text">Mac Donalds</p>
+    </footer>
+</body>
+</html>

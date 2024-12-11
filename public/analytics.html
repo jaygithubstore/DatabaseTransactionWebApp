@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <link rel="stylesheet" href="styles.css">
+    <script>
+        
+        async function fetchTopSeller() {
+            const response = await fetch('http://localhost:3000/top');
+            const menus = await response.json();
+            const table = document.getElementById('topSeller');
+            table.innerHTML = '';
+            menus.forEach(menu => {
+                const row = `<tr>
+                                <td>${menu.restaurant_name}</td>
+                                <td>${menu.best_selling_product}</td>
+                                <td>${menu.total_quantity_sold}</td>
+                             </tr>`;
+                table.innerHTML += row;
+            });
+        }
+
+        async function fetchLeastSeller() {
+            const response = await fetch('http://localhost:3000/least');
+            const menus = await response.json();
+            const table = document.getElementById('leastSeller');
+            table.innerHTML = '';
+            menus.forEach(menu => {
+                const row = `<tr>
+                                <td>${menu.restaurant_name}</td>
+                                <td>${menu.least_selling_product}</td>
+                                <td>${menu.total_quantity_sold}</td>
+                             </tr>`;
+                table.innerHTML += row;
+            });
+        }
+
+        async function fetchBestCustomers() {
+            const response = await fetch('http://localhost:3000/top-customers');
+            const menus = await response.json();
+            const table = document.getElementById('topCustomers');
+            table.innerHTML = '';
+            menus.forEach(menu => {
+                const row = `<tr>
+                                <td>${menu.customer_name}</td>
+                                <td>${menu.customer_email}</td>
+                                <td>${menu.total_orders}</td>
+                             </tr>`;
+                table.innerHTML += row;
+            });
+        }
+
+        async function fetchBestRestaurantQ() {
+            const response = await fetch('http://localhost:3000/top-branches');
+            const menus = await response.json();
+            const table = document.getElementById('topQuantity');
+            table.innerHTML = '';
+            menus.forEach(menu => {
+                const row = `<tr>
+                                <td>${menu.branch_name}</td>
+                                <td>${menu.branch_location}</td>
+                                <td>${menu.total_quantity_sold}</td>
+                             </tr>`;
+                table.innerHTML += row;
+            });
+        }
+
+        async function fetchBestRestaurantO() {
+            const response = await fetch('http://localhost:3000/top-branches-orders');
+            const menus = await response.json();
+            const table = document.getElementById('topOrder');
+            table.innerHTML = '';
+            menus.forEach(menu => {
+                const row = `<tr>
+                                <td>${menu.branch_name}</td>
+                                <td>${menu.branch_location}</td>
+                                <td>${menu.total_orders}</td>
+                             </tr>`;
+                table.innerHTML += row;
+            });
+        }
+
+        async function fetchProfit() {
+            const response = await fetch('http://localhost:3000/profit');
+            const menus = await response.json();
+            const table = document.getElementById('profit');
+            table.innerHTML = '';
+            menus.forEach(menu => {
+                let gross = menu.total_cogs * 0.5;
+                const row = `<tr>
+                                <td>${menu.restaurant_name}</td>
+                                <td>${menu.branch_location}</td>
+                                <td>${menu.total_cogs}</td>
+                                <td>${gross.toFixed(2)}</td>
+                             </tr>`;
+                table.innerHTML += row;
+            });
+        }
+
+        function navigateToTables() {
+            window.location.href = 'tables.html';
+        }
+        function navigateToSimulation() {
+            window.location.href = 'simulation.html';
+        }
+        function navigateToPage() {
+            window.location.href = 'transaction.html';
+        }
+        function navigateToHome() {
+            window.location.href = 'index.html';
+        }
+
+    </script>
+</head>
+<body onload="fetchTopSeller(); fetchLeastSeller(); fetchBestCustomers(); fetchBestRestaurantQ(); fetchBestRestaurantO(); fetchProfit();">
+
+    <!-- Header Section -->
+    <div class="header-container">
+        <img src="images.png" alt="logo" class="logo">
+        <nav>
+            <button class="centered-button" onclick="navigateToHome()">Home Page</button>
+            <button class="centered-button" onclick="navigateToPage()">Order</button>
+            <button class="centered-button" onclick="navigateToTables()">View Tables</button>
+            <button class="centered-button" onclick="navigateToSimulation()">Run Simulation</button>
+        </nav>
+    </div>
+
+    <!-- Top Selling Product Section -->
+    <main>
+        <section class="form-section">
+            <h1>Top Selling Product Per Restaurant</h1>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Restaurant Name</th>
+                        <th>Best Selling Product</th>
+                        <th>Orders Placed</th>
+                    </tr>
+                </thead>
+                <tbody id="topSeller"></tbody>
+            </table>
+        </section>
+
+        <!-- Least Selling Product Section -->
+        <section class="form-section">
+            <h1>Least Selling Product Per Restaurant</h1>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Restaurant Name</th>
+                        <th>Least Selling Product</th>
+                        <th>Quantity Sold</th>
+                    </tr>
+                </thead>
+                <tbody id="leastSeller"></tbody>
+            </table>
+        </section>
+
+        <!-- Top Customers Section -->
+        <section class="form-section">
+            <h1>Top Ordering Customers</h1>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Customer Name</th>
+                        <th>Customer Email</th>
+                        <th>Total Orders</th>
+                    </tr>
+                </thead>
+                <tbody id="topCustomers"></tbody>
+            </table>
+        </section>
+
+        <!-- Top Restaurants (By Quantity Sold) Section -->
+        <section class="form-section">
+            <h1>Top Performing Restaurants (By Quantity Sold)</h1>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Branch Name</th>
+                        <th>Branch Location</th>
+                        <th>Total Quantity Sold</th>
+                    </tr>
+                </thead>
+                <tbody id="topQuantity"></tbody>
+            </table>
+        </section>
+
+        <!-- Top Restaurants (By Orders Placed) Section -->
+        <section class="form-section">
+            <h1>Top Performing Restaurants (By Orders Placed)</h1>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Branch Name</th>
+                        <th>Branch Location</th>
+                        <th>Total Orders</th>
+                    </tr>
+                </thead>
+                <tbody id="topOrder"></tbody>
+            </table>
+        </section>
+
+        <!-- Restaurant Profits Section -->
+        <section class="form-section">
+            <h1>Restaurant Profits (Gross and Net)</h1>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Restaurant Name</th>
+                        <th>Branch Location</th>
+                        <th>Gross Profit</th>
+                        <th>Net Profit (50% Margins)</th>
+                    </tr>
+                </thead>
+                <tbody id="profit"></tbody>
+            </table>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <p class="footer-text">Mac Donalds</p>
+    </footer>
+</body>
+</html>

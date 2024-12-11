@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant List</title>
+    <link rel="stylesheet" href="styles.css">
+    <script>
+        async function fetchRestaurants() {
+            const response = await fetch('http://localhost:3000/restaurant');
+            const restaurants = await response.json();
+            const table = document.getElementById('restaurantTable');
+            table.innerHTML = '';
+            restaurants.forEach(restaurant => {
+                const row = `<tr>
+                                <td>${restaurant.rid}</td>
+                                <td>${restaurant.location}</td>
+                                <td>${restaurant.name}</td>
+                                <td>${restaurant.rating}</td>
+                             </tr>`;
+                table.innerHTML += row;
+            });
+        }
+
+        async function fetchMenu() {
+            const response = await fetch('http://localhost:3000/menu');
+            const menus = await response.json();
+            const table = document.getElementById('menuTable');
+            table.innerHTML = '';
+            menus.forEach(menu => {
+                const row = `<tr>
+                                <td>${menu.item_id}</td>
+                                <td>${menu.item_name}</td>
+                                <td>${menu.description}</td>
+                                <td>${menu.cost}</td>
+                                <td>${menu.member_cost}</td>
+                             </tr>`;
+                table.innerHTML += row;
+            });
+        }
+
+        async function fetchBank() {
+            const response = await fetch('http://localhost:3000/bank');
+            const costs = await response.json();
+            const table = document.getElementById('bankTable');
+            table.innerHTML = '';
+            costs.forEach(cost => {
+                const row = `<tr>
+                                <td>${cost.bank_account}</td>
+                                <td>${cost.card_number}</td>
+                                <td>${cost.card_expiration}</td>
+                                <td>${cost.card_pin}</td>
+                                <td>${cost.account_balance}</td>
+                             </tr>`;
+                table.innerHTML += row;
+            });
+        }
+
+        async function fetchCustomers() {
+            const response = await fetch('http://localhost:3000/customer');
+            const customers = await response.json();
+            const table = document.getElementById('customerTable');
+            table.innerHTML = '';
+            customers.forEach(customer => {
+                const row = `<tr>
+                                <td>${customer.cid}</td>
+                                <td>${customer.name}</td>
+                                <td>${customer.email}</td>
+                                <td>${customer.phone_number}</td>
+                                <td>${customer.membership}</td>
+                                <td>${customer.bank_account}</td>
+                             </tr>`;
+                table.innerHTML += row;
+            });
+        }
+
+        async function fetchOrder() {
+            const response = await fetch('http://localhost:3000/order');
+            const customersP = await response.json();
+            const table = document.getElementById('orderTable');
+            table.innerHTML = '';
+            customersP.forEach(customerP => {
+                const row = `<tr>
+                                <td>${customerP.transaction_id}</td>
+                                <td>${customerP.menu_item}</td>
+                                <td>${customerP.quantity}</td>
+                                <td>${customerP.restaurant_id}</td>
+                             </tr>`;
+                table.innerHTML += row;
+            });
+        }
+
+        async function fetchTransaction() {
+            const response = await fetch('http://localhost:3000/transaction');
+            const orders = await response.json();
+            const table = document.getElementById('transactionTable');
+            table.innerHTML = '';
+            orders.forEach(order => {
+                const row = `<tr>
+                                <td>${order.tid}</td>
+                                <td>${order.cost}</td>
+                                <td>${order.date}</td>
+                                <td>${order.customer_id}</td>
+                                <td>${order.payment_method}</td>
+                                <td>${order.location_id}</td>
+                             </tr>`;
+                table.innerHTML += row;
+            });
+        }
+
+        async function fetchStock() {
+            const response = await fetch('http://localhost:3000/stock');
+            const orders = await response.json();
+            const table = document.getElementById('stockTable');
+            table.innerHTML = '';
+            orders.forEach(order => {
+                const row = `<tr>
+                                <td>${order.item_id}</td>
+                                <td>${order.restaurant_id}</td>
+                                <td>${order.stock}</td>
+                             </tr>`;
+                table.innerHTML += row;
+            });
+        }
+
+        
+        async function fetchEmployees() {
+            const response = await fetch('http://localhost:3000/employees');
+            const orders = await response.json();
+            const table = document.getElementById('employeeTable');
+            table.innerHTML = '';
+            orders.forEach(order => {
+                const row = `<tr>
+                                <td>${order.employee_id}</td>
+                                <td>${order.restaurant_id}</td>
+                                <td>${order.name}</td>
+                                <td>${order.role}</td>
+                                <td>${order.salary}</td>
+                             </tr>`;
+                table.innerHTML += row;
+            });
+        }
+
+
+        async function updateCost() {
+            const foodItem = document.getElementById('foodItem').value;
+            const newPrice = document.getElementById('newPrice').value;
+            const newMemberPrice = document.getElementById('newMemberPrice').value;
+            if (!foodItem || !newPrice || !newMemberPrice) {
+                alert('All fields are required.');
+                return;
+            }
+            try {
+                const response = await fetch(`http://localhost:3000/menus`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        foodItem: foodItem,
+                        newPrice: parseFloat(newPrice),
+                        newMemberPrice: parseFloat(newMemberPrice),
+                    }),
+                });
+
+                // Check if the response is successful (status code 200)
+                if (response.ok) {
+                    alert('Menu item updated successfully!');
+                } else {
+                    const errorText = await response.text();
+                    alert(`Error: ${errorText}`);
+                }
+
+                // Clear inputs after the update
+                document.getElementById('foodItem').value = '';
+                document.getElementById('newPrice').value = '';
+                document.getElementById('newMemberPrice').value = '';
+
+                // Refresh menu after the update
+                fetchMenu();
+
+            } catch (err) {
+                // Catch any errors that occur during the fetch or in the try block
+                console.error("Error updating menu item:", err);
+                alert('An error occurred while updating the menu item.');
+            }
+        }
+
+        async function addCustomer() {
+            const newName = document.getElementById('addName').value;
+            const newEmail = document.getElementById('addEmail').value;
+            const newNumber = document.getElementById('addNumber').value;
+            const membership = document.getElementById('membership').value;
+            const bankAccount = document.getElementById('bankAccount').value;
+            const card = document.getElementById('card').value;
+            const expiration = document.getElementById('expiration').value;
+            const pin = document.getElementById('pin').value;
+            const balance = document.getElementById('balance').value;
+
+            try {
+                const response = await fetch('http://localhost:3000/customer', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: newName, 
+                        email: newEmail, 
+                        number: newNumber, 
+                        membership: membership, 
+                        bankAccount: bankAccount, 
+                        card: card, 
+                        expiration: expiration, 
+                        pin: pin, 
+                        balance: balance 
+                    })
+                });
+
+                if (response.ok) {
+                    alert('Successfully added new customer to customers.');
+                    // Clear the form fields
+                    document.getElementById('addName').value = '';
+                    document.getElementById('addEmail').value = '';
+                    document.getElementById('addNumber').value = '';
+                    document.getElementById('membership').value = '';
+                    document.getElementById('bankAccount').value = '';
+                    document.getElementById('card').value = '';
+                    document.getElementById('expiration').value = '';
+                    document.getElementById('pin').value = ''; 
+                    document.getElementById('balance').value = '';  // Clear input
+
+                    // Refresh the customer and bank data
+                    fetchCustomers();  
+                    fetchBank();
+                } else {
+                    alert('Failed to add customer. Please check your input.');
+                }
+            } catch (err) {
+                console.error("Error adding customer: ", err);
+                alert('An error occurred. Please try again.');
+            }
+        }
+
+        async function deleteRestaurant() {
+            const restaurantid = document.getElementById('deleteId').value;
+
+            try {
+                const response = await fetch(`http://localhost:3000/restaurant/${restaurantid}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    alert('Successfully deleted the restaurant.');
+                    document.getElementById('deleteId').value = '';  // Clear input
+                    fetchRestaurants();  // Refresh the table after deleting
+                } else {
+                    alert('Failed to delete restaurant. Please check the restaurant ID.');
+                }
+            } catch (err) {
+                console.error("Error deleting restaurant: ", err);
+                alert('An error occurred. Please try again.');
+            }
+        }
+
+        async function addRestaurant() {
+            const restaurantLocation = document.getElementById('restaurantLocation').value;
+            const restaurantName = document.getElementById('restaurantName').value;
+            const restaurantRating = document.getElementById('restaurantRating').value;
+
+            try {
+                const response = await fetch(`http://localhost:3000/restaurant`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ restaurantLocation: restaurantLocation, restaurantName: restaurantName, restaurantRating: restaurantRating })
+                });
+
+                if (response.ok) {
+                    // Success: Alert user and refresh the table
+                    alert('Restaurant successfully added!');
+                    document.getElementById('restaurantLocation').value = '';
+                    document.getElementById('restaurantName').value = '';
+                    document.getElementById('restaurantRating').value = '';
+                    fetchRestaurants();  // Refresh the table after update
+                } else {
+                    // Failure: Alert user about the failure
+                    alert('Failed to add restaurant. Please try again.');
+                }
+            } catch (error) {
+                // Error handling
+                console.error("Error adding restaurant:", error);
+                alert('An error occurred while adding the restaurant. Please try again.');
+            }
+        }
+
+        function navigateToPage() {
+            window.location.href = 'transaction.html';
+        }
+        function navigateToSimulation() {
+            window.location.href = 'simulation.html';
+        }
+        function navigateToHome() {
+            window.location.href = 'index.html';
+        }
+        function navigateToAnalytics() {
+            window.location.href = 'analytics.html';
+        }
+
+    </script>
+</head>
+<body onload="fetchRestaurants(); fetchMenu(); fetchBank(); fetchCustomers(); fetchTransaction(); fetchOrder(); fetchStock(); fetchEmployees();">
+
+    <!-- Header Section -->
+    <div class="header-container">
+        <img src="images.png" alt="logo" class="logo">
+        <nav>
+            <button class="centered-button" onclick="navigateToHome()">Home Page</button>
+            <button class="centered-button" onclick="navigateToPage()">Order</button>
+            <button class="centered-button" onclick="navigateToAnalytics()">View Analytics</button>
+            <button class="centered-button" onclick="navigateToSimulation()">Run Simulation</button>
+        </nav>
+    </div>
+
+    <!-- Restaurant List Section -->
+    <main>
+        <section class="form-section">
+            <h1>Restaurant List</h1>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Restaurant ID</th>
+                        <th>Location</th>
+                        <th>Name</th>
+                        <th>Rating</th>
+                    </tr>
+                </thead>
+                <tbody id="restaurantTable"></tbody>
+            </table>
+        </section>
+
+        <!-- Menu List Section -->
+        <section class="form-section">
+            <h1>Menu List</h1>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Item ID</th>
+                        <th>Item Name</th>
+                        <th>Description</th>
+                        <th>Cost</th>
+                        <th>Member Cost</th>
+                    </tr>
+                </thead>
+                <tbody id="menuTable"></tbody>
+            </table>
+        </section>
+
+        <!-- Customer List Section -->
+        <section class="form-section">
+            <h1>Customer List</h1>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Customer ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone Number</th>
+                        <th>Membership</th>
+                        <th>Bank Account</th>
+                    </tr>
+                </thead>
+                <tbody id="customerTable"></tbody>
+            </table>
+        </section>
+
+        <!-- Bank List Section -->
+        <section class="form-section">
+            <h1>Bank List</h1>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Bank Account</th>
+                        <th>Card Number</th>
+                        <th>Card Expiration</th>
+                        <th>Card PIN</th>
+                        <th>Account Balance</th>
+                    </tr>
+                </thead>
+                <tbody id="bankTable"></tbody>
+            </table>
+        </section>
+
+        <!-- Transaction List Section -->
+        <section class="form-section">
+            <h1>Transaction List</h1>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Cost</th>
+                        <th>Date</th>
+                        <th>Customer ID</th>
+                        <th>Payment Method</th>
+                        <th>Location ID</th>
+                    </tr>
+                </thead>
+                <tbody id="transactionTable"></tbody>
+            </table>
+        </section>
+
+        <!-- Order List Section -->
+        <section class="form-section">
+            <h1>Order List</h1>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Transaction ID</th>
+                        <th>Menu Item</th>
+                        <th>Quantity</th>
+                        <th>Restaurant ID</th>
+                    </tr>
+                </thead>
+                <tbody id="orderTable"></tbody>
+            </table>
+        </section>
+
+        <!-- Stock Section -->
+        <section class="form-section">
+            <h1>Stock</h1>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Menu ID</th>
+                        <th>Restaurant ID</th>
+                        <th>Stock</th>
+                    </tr>
+                </thead>
+                <tbody id="stockTable"></tbody>
+            </table>
+        </section>
+
+        <!-- Employees Section -->
+        <section class="form-section">
+            <h1>Employees</h1>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Employee ID</th>
+                        <th>Restaurant ID</th>
+                        <th>Full Name</th>
+                        <th>Role</th>
+                        <th>Salary</th>
+                    </tr>
+                </thead>
+                <tbody id="employeeTable"></tbody>
+            </table>
+        </section>
+    </main>
+    <div class="form-section">
+        <h2>Update Item Price</h2>
+        <label for="foodItem">Food Item ID: </label>
+        <input type="number" id="foodItem" />
+        <label for="newPrice">New Price: </label>
+        <input type="number" id="newPrice" step="0.01" min="0" />
+        <label for="newMemberPrice">New Member Price: </label>
+        <input type="number" id="newMemberPrice" step="0.01" min="0" />
+        <button onclick="updateCost()">Update Food Item Cost</button>
+    </div>
+
+    <div class="form-section">
+        <h2>Add New Customer</h2>
+        <label for="addName">Name: </label>
+        <input type="text" id="addName" />
+        <label for="addEmail">Email: </label>
+        <input type="text" id="addEmail" />
+        <label for="addNumber">Phone Number: </label>
+        <input type="tel" id="addNumber" />
+        <label for="membership">Membership: </label>
+        <select id="membership" name="membership">
+            <option value="true">Yes</option>
+            <option value="false">No</option>
+        </select>
+        <label for="bankAccount">Bank Account Number: </label>
+        <input type="number" id="bankAccount" />
+        <label for="card">Card Number: </label>
+        <input type="number" id="card" />
+        <label for="expiration">Expiration Date: </label>
+        <input type="date" id="expiration" />
+        <label for="pin">PIN: </label>
+        <input type="password" id="pin" name="pin" pattern="\d{4}" maxlength="4" required placeholder="****" title="Enter a 4-digit PIN" />
+        <label for="balance">Balance: </label>
+        <input type="number" id="balance" step="0.01" min="0" />
+        <button onclick="addCustomer()">Add Customer</button>
+    </div>
+
+    <div class="form-section">
+        <h2>Delete Restaurant</h2>
+        <label for="deleteId">Restaurant ID: </label>
+        <input type="number" id="deleteId" />
+        <button onclick="deleteRestaurant()">Delete Restaurant</button>
+    </div>
+
+    <div class="form-section">
+        <h2>Insert Restaurant</h2>
+        <label for="restaurantLocation">Restaurant Location: </label>
+        <input type="text" id="restaurantLocation" />
+        <label for="restaurantName">Restaurant Name: </label>
+        <input type="text" id="restaurantName" />
+        <label for="restaurantRating">Restaurant Rating: </label>
+        <input type="number" id="restaurantRating" step="0.1" min="0" />
+        <button onclick="addRestaurant()">Add Restaurant</button>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <p class="footer-text">Mac Donalds</p>
+    </footer>
+</body>
+</html>

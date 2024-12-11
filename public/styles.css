@@ -1,0 +1,193 @@
+/* General Page Layout */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #fff7e6; /* Light yellow background */
+    color: #333;
+}
+h1, h2 {
+    color: #da291c; /* McDonald's Red */
+    font-size: 24px;
+    border-bottom: 2px solid #ffc72c; /* McDonald's Yellow */
+    padding-bottom: 5px;
+    margin-top: 20px;
+}
+h2 {
+    font-size: 20px;
+}
+
+/* Table Styling */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+th, td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    text-align: left;
+}
+th {
+    background-color: #da291c; /* McDonald's Red */
+    color: white;
+}
+tr:nth-child(even) {
+    background-color: #ffe8b2; /* Light yellow for alternate rows */
+}
+tr:hover {
+    background-color: #ffc72c; /* Add hover effect for rows */
+    cursor: pointer;
+}
+
+/* Button Styles */
+button {
+    padding: 12px;
+    font-size: 16px; /* Slightly larger font for readability */
+    background-color: #ffc72c; /* McDonald's Yellow */
+    color: #da291c; /* McDonald's Red */
+    border: none;
+    border-radius: 8px; /* Rounded buttons for modern design */
+    cursor: pointer;
+    margin-top: 10px;
+    font-weight: bold;
+    transition: background-color 0.3s ease; /* Smooth hover effect */
+}
+button:hover {
+    background-color: #e8a800; /* Darker yellow for hover effect */
+}
+.wide-button {
+    width: 100%;
+    max-width: 300px;
+}
+/* Centered and Larger Button */
+.centered-button {
+    display: block;
+    width: auto;
+    padding: 15px 30px;
+    font-size: 18px;
+    background-color: #ffc72c;
+    color: #da291c;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: center;
+    margin: 10px 0; /* Spacing between buttons */
+}
+.centered-button:hover {
+    background-color: #e8a800;
+}
+
+/* Header Container */
+.header-container {
+    display: flex;
+    justify-content: space-between; /* Space logo and buttons */
+    align-items: center; /* Center items vertically */
+    padding: 15px 40px; /* Add padding */
+    background-color: #fff7e6;
+    border-bottom: 2px solid #ffc72c;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+}
+
+.logo {
+    height: 60px; /* Larger logo size */
+    margin-right: 20px; /* Add spacing from buttons */
+}
+
+/* Navigation Buttons */
+nav {
+    display: flex;
+    flex-wrap: wrap; /* Wrap buttons on smaller screens */
+    gap: 15px; /* Add spacing between buttons */
+}
+
+/* Form Sections */
+.form-section {
+    background-color: #fff;
+    padding: 20px;
+    margin-top: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    max-width: 1000px; /* Constrain form width */
+    margin-left: auto; /* Center forms */
+    margin-right: auto;
+}
+.form-section label {
+    display: block;
+    margin-top: 10px;
+    font-weight: bold;
+    color: #da291c; /* McDonald's Red */
+}
+.form-section input,
+.form-section select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+.form-section button {
+    max-width: 200px;
+    margin-top: 10px;
+}
+
+/* Specific Element Styles */
+#totalCost,
+#selectedCustomer,
+#selectedRestaurant,
+#selectedPayment {
+    font-size: 16px;
+    color: #da291c; /* McDonald's Red */
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+#tipInput {
+    width: 80px;
+    padding: 8px;
+    border: 1px solid #da291c; /* Red border for input */
+    border-radius: 4px;
+}
+
+/* Highlighted Text */
+.highlight {
+    font-size: 18px;
+    font-weight: bold;
+    color: #da291c; /* McDonald's Red */
+    margin-top: 15px;
+}
+
+/* Footer */
+footer {
+    text-align: center;
+    margin-top: 30px;
+    padding: 15px;
+    background-color: #ffe8b2;
+    color: #333;
+}
+
+.footer-text {
+    font-size: 14px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .header-container {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    nav {
+        width: 100%;
+        justify-content: center; /* Center navigation on smaller screens */
+    }
+    .form-section {
+        padding: 15px;
+    }
+    button {
+        font-size: 14px; /* Adjust button font size */
+    }
+}
+

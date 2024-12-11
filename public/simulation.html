@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <link rel="stylesheet" href="styles.css">
+    <script>
+        let b = {}; // Bank account balances
+        let c = {}; // Customer to bank account mapping
+        let menuCost = {};
+        let memCost = {};
+        // Fetch the bank data and store the account balance by bank account number
+        async function fetchBank() {
+            const response = await fetch('http://localhost:3000/bank');
+            const banks = await response.json();
+            banks.forEach(bank => {
+                b[bank.bank_account] = bank.account_balance;
+            });
+        }
+        // Fetch the customer data and map customer id to their bank account number
+        async function fetchCustomers() {
+            const response = await fetch('http://localhost:3000/customer');
+            const customers = await response.json(); // Corrected this line
+            customers.forEach(customer => {
+                c[customer.cid] = customer.bank_account;
+            });
+        }
+        async function fetchMenu() {
+            const response = await fetch('http://localhost:3000/menu');
+            const menus = await response.json();
+            menus.forEach(menu => {
+                menuCost[menu.item_id] = parseFloat(menu.cost); // Convert to number
+                memCost[menu.item_id] = parseFloat(menu.member_cost); // Convert to number
+            });
+        }
+        // Run a random simulation by selecting a random customer
+        async function runRandomSimulation() {
+            const table = document.getElementById('test');
+            table.innerHTML = '';
+            const startTime = performance.now();
+            for (let i = 0; i < 100; i++) {
+                let cid = Math.floor(Math.random() * 25) + 1; // Random customer ID
+                let ba = c[cid]; // Get the bank account of the customer
+                let rid = Math.floor(Math.random() * 10) + 1; // Random restaurant ID
+                const table = document.getElementById('test');
+                let paymentMethod = (i % 2 === 0) ? 'cash' : 'card';
+                let itemDict = {};
+                let items = Math.floor(Math.random() * 5) + 1;
+                let cost = 0;
+                let member = (i % 3 === 0) ? true : false;
+                for (let j = 0; j < items; j++) {
+                    let index = Math.floor(Math.random() * 15) + 1; // Random menu item ID (1-15)
+
+                    // Initialize itemDict[index] if it doesn't exist
+                    if (!itemDict[index]) {
+                        itemDict[index] = 0;
+                    }
+                    itemDict[index]++; // Increment the count of this item
+
+                    // Add to cost only if the index exists in the menuCost or memCost
+                    if (i % 3 == 0) {
+                        cost += memCost[index] || 0; // Use 0 if memCost[index] is undefined
+                    } else {
+                        cost += menuCost[index] || 0; // Use 0 if menuCost[index] is undefined
+                    }
+                }
+                let itemDetails = Object.entries(itemDict)
+                    .map(([itemId, count]) => `Item ${itemId}: ${count}`)
+                    .join(', ');
+                cost *= 1.08; // Apply 8% tax
+                try {
+                    // Create the data object to be sent
+                    const requestData = {
+                        cid: cid,
+                        ba: ba,
+                        rid: rid,
+                        cost: cost,
+                        itemDict: itemDict,
+                        paymentMethod: paymentMethod,
+                    };
+
+                    // Send the POST request to a single endpoint
+                    const response = await fetch('http://localhost:3000/commitTransactionLock', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(requestData)
+                    });
+                    const endTime = performance.now();
+                    const transactionTime = (endTime - startTime).toFixed(2);
+                    // Handle the response
+                    if (response.ok) {
+                        // Successful transaction
+                        console.log("Transaction successfully committed.");
+                        if (ba) {
+                            const row = `<tr>
+                                            <td>${cid}</td>
+                                            <td>${ba}</td>
+                                            <td>${member}</td>
+                                            <td>${rid}</td>
+                                            <td>${paymentMethod}</td>
+                                            <td>${cost.toFixed(2)}</td>
+                                            <td>${itemDetails}</td>
+                                            <td>TRANSACTION SUCCESSFUL</td>
+                                            <td>${transactionTime} ms</td>
+                                        </tr>`;
+                            table.innerHTML += row;
+                        } else {
+                            table.innerHTML += `<tr><td colspan="5">No data available for selected customer.</td></tr>`;
+                        }
+                    } else {
+                        const errorData = await response.json();
+                        console.error("Error:", errorData.error);
+                        if (ba) {
+                            const row = `<tr>
+                                            <td>${cid}</td>
+                                            <td>${ba}</td>
+                                            <td>${member}</td>
+                                            <td>${rid}</td>
+                                            <td>${paymentMethod}</td>
+                                            <td>${cost.toFixed(2)}</td>
+                                            <td>${itemDetails}</td>
+                                            <td>TRANSACTION FAILED ${errorData.error}</td>
+                                            <td>${transactionTime} ms</td>
+                                        </tr>`;
+                            table.innerHTML += row;
+                        } else {
+                            table.innerHTML += `<tr><td colspan="5">No data available for selected customer.</td></tr>`;
+                        }
+                    }
+                } catch (error) {
+                    console.error("Request failed", error);
+                    const endTime = performance.now();
+                    const transactionTime = (endTime - startTime).toFixed(2);
+                    if (ba) {
+                            const row = `<tr>
+                                            <td>${cid}</td>
+                                            <td>${ba}</td>
+                                            <td>${member}</td>
+                                            <td>${rid}</td>
+                                            <td>${paymentMethod}</td>
+                                            <td>${cost.toFixed(2)}</td>
+                                            <td>${itemDetails}</td>
+                                            <td>TRANSACTION FAILED ${error}</td>
+                                            <td>${transactionTime} ms</td>
+                                        </tr>`;
+                            table.innerHTML += row;
+                        } else {
+                            table.innerHTML += `<tr><td colspan="5">No data available for selected customer.</td></tr>`;
+                        }
+                }
+            }
+        }
+
+        function navigateToTables() {
+            window.location.href = 'tables.html';
+        }
+
+        function navigateToAnalytics() {
+            window.location.href = 'analytics.html';
+        }
+
+        function navigateToPage() {
+            window.location.href = 'transaction.html';
+        }
+
+        function navigateToHome() {
+            window.location.href = 'index.html';
+        }
+
+    </script>
+</head>
+<body onload="fetchBank(); fetchCustomers(); fetchMenu();">
+
+    <!-- Header Section -->
+    <div class="header-container">
+        <img src="images.png" alt="logo" class="logo">
+        <nav>
+            <button class="centered-button" onclick="navigateToHome()">Home Page</button>
+            <button class="centered-button" onclick="navigateToPage()">Order</button>
+            <button class="centered-button" onclick="navigateToTables()">View Tables</button>
+            <button class="centered-button" onclick="navigateToAnalytics()">View Analytics</button>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Simulation Control Section -->
+        <section class="form-section">
+            <h1>Run Simulation</h1>
+            <button class="centered-button" onclick="runRandomSimulation()">Run Random Simulation</button>
+        </section>
+
+        <!-- Simulation Results Section -->
+        <section class="form-section">
+            <h2>Simulation Results</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Customer ID</th>
+                        <th>Bank Account</th>
+                        <th>Member</th>
+                        <th>Restaurant ID</th>
+                        <th>Payment Method</th>
+                        <th>Cost</th>
+                        <th>Items Added</th>
+                        <th>Status</th>
+                        <th>Time</th>
+                    </tr>
+                </thead>
+                <tbody id="test"></tbody>
+            </table>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <p class="footer-text">Mac Donalds</p>
+    </footer>
+</body>
+</html>

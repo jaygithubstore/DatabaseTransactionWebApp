@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <link rel="stylesheet" href="styles.css">
+    <script>
+        
+        function navigateToPage() {
+            window.location.href = 'transaction.html';
+        }
+
+        function navigateToTables() {
+            window.location.href = 'tables.html';
+        }
+
+        function navigateToSim() {
+            window.location.href = 'simulation.html';
+        }
+
+        function navigateToAnalytics() {
+            window.location.href = 'analytics.html';
+        }
+
+        async function createTables() {
+            const createT = document.getElementById('create');
+            try {
+                const response = await fetch('http://localhost:3000/createTables', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                if (response.ok) {
+                    alert("Tables created successfully.");
+                    createT.innerHTML = 'TABLES SUCCESSFULLY CREATED';
+                } else {
+                    const errorData = await response.json();
+                    alert(`Error: ${errorData.error}`);
+                    createT.innerHTML = 'TABLES WERE NOT ABLE TO BE CREATED OR HAVE NOT BEEN CREATED YET';
+                }
+            } catch (error) {
+                console.error("Error creating tables:", error);
+                alert("An error occurred while creating tables.");
+                createT.innerHTML = 'TABLES WERE NOT ABLE TO BE CREATED OR HAVE NOT BEEN CREATED YET';
+            }
+        }
+
+        async function populateTables() {
+            const dataT = document.getElementById('data');
+            try {
+                const response = await fetch('http://localhost:3000/populateTables', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                if (response.ok) {
+                    alert("Tables created successfully.");
+                    dataT.innerHTML = 'TABLE DATA SUCCESSFULLY INPUTTED';
+                } else {
+                    const errorData = await response.json();
+                    alert(`Error: ${errorData.error}`);
+                    dataT.innerHTML = 'TABLE DATA WAS NOT ABLE TO BE INSERTED INTO DATABASE TABLES OR TABLES HAVE NOT BEEN CREATED';
+                }
+            } catch (error) {
+                console.error("Error creating tables:", error);
+                alert("An error occurred while creating tables.");
+                dataT.innerHTML = 'TABLE DATA WAS NOT ABLE TO BE INSERTED INTO DATABASE TABLES OR TABLES HAVE NOT BEEN CREATED';
+            }
+        }
+
+    </script>
+</head>
+<body>
+
+    <div class="header-container">
+        <img src="images.png" alt="logo" class="logo">
+        <button class="centered-button" onclick="createTables()">Create Database</button>
+        <button class="centered-button" onclick="populateTables()">Populate Database</button>
+        <button class="centered-button" onclick="navigateToSim()">Run Simulation</button>
+        <button class="centered-button" onclick="navigateToPage()">Order Food Transaction</button>
+        <button class="centered-button" onclick="navigateToTables()">View Tables</button>
+        <button class="centered-button" onclick="navigateToAnalytics()">View Restaurant Analytics</button>
+    </div>
+    <h2>Status of Database Creation:</h2>
+    <div id="create">
+    </div>
+    <h2>Status of Database Data:</h2>
+    <div id="data">
+    </div>
+    <h1>
+        <a href="https://youtu.be/TblTPWn97pM" target="_blank" style="text-decoration: none; color: inherit;">
+          Watch Our Presentation! Click Me!
+        </a>
+    </h1>      
+
+</body>
+</html>
